@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Global Warfare: Sanket Edition</title>
+    <style>
+        body { margin: 0; background: #0a0a0a; color: white; font-family: 'Courier New', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        canvas { border: 4px solid #2e3314; display: none; }
+        .screen { display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(20, 20, 20, 0.95); width: 1200px; height: 800px; border: 4px solid #4b5320; position: absolute; z-index: 5; text-align: center; }
+        #signInScreen { z-index: 10; border-color: #00ff00; }
+        .input-box { background: #111; border: 2px solid #00ff00; color: #00ff00; padding: 15px; font-size: 20px; width: 300px; text-align: center; margin-bottom: 20px; outline: none; }
+        h1 { font-size: 40px; color: #4b5320; margin-bottom: 20px; text-transform: uppercase; }
+        .btn { background: #4b5320; color: white; border: 2px solid white; padding: 12px 30px; font-size: 20px; cursor: pointer; font-weight: bold; margin: 8px; width: 350px; text-align: center; }
+        .btn:hover { background: #00ff00; color: black; }
+        .share-btn { background: #25D366; color: white; border: none; padding: 15px; font-size: 18px; cursor: pointer; font-weight: bold; margin-top: 15px; width: 350px; border-radius: 5px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 10px; }
+        .country-card { background: #1a1a1a; padding: 15px; border: 2px solid #333; cursor: pointer; transition: 0.2s; width: 145px; border-radius: 8px; }
+        .country-card:hover { border-color: #00ff00; background: #222; }
+        .flag { width: 90px; height: 55px; margin: 0 auto 10px; border: 1px solid #555; position: relative; animation: wave 3s ease-in-out infinite; transform-origin: left center; }
+        @keyframes wave { 0%, 100% { transform: skewY(0deg); } 50% { transform: skewY(2deg) scaleX(0.98); } }
+        .f-india { background: linear-gradient(#FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%); }
+        .f-india::after { content: "⚙"; color: #000080; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 14px; }
+        .f-russia { background: linear-gradient(#FFFFFF 33.3%, #0039A6 33.3%, #0039A6 66.6%, #D52B1E 66.6%); }
+        .f-china { background: #DE2910; }
+        .f-china::after { content: "★"; color: #FFDE00; position: absolute; top: 5px; left: 8px; font-size: 18px; }
+        .f-mexico { background: linear-gradient(to right, #006847 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #CE1126 66.6%); }
+        .f-france { background: linear-gradient(to right, #002395 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #ED2939 66.6%); }
+        .f-pakistan { background: linear-gradient(to right, #FFFFFF 25%, #00401A 25%); position: relative; }
+        .f-pakistan::after { content: "☾*"; color: white; position: absolute; top: 50%; left: 60%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 16px; font-weight: bold; }
+        .f-usa { background: repeating-linear-gradient(#B22234, #B22234 4.2px, #FFFFFF 4.2px, #FFFFFF 8.4px); position: relative; }
+        .f-usa::after { content: "★"; color: white; background: #3C3B6E; position: absolute; top: 0; left: 0; width: 40px; height: 28px; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+        .ui { position: absolute; top: 20px; left: 20px; pointer-events: none; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 5px; display: none; z-index: 20; border-left: 5px solid #00ff00; }
+        #cheatFeedback { position: absolute; bottom: 100px; width: 100%; text-align: center; color: #00ff00; font-weight: bold; font-size: 28px; display: none; z-index: 30; pointer-events: none; text-shadow: 2px 2px #000; }
+        #victoryOverlay { display: none; z-index: 100; border-color: gold; }
+    </style>
+</head>
+<body>
+
+    <div id="signInScreen" class="screen">
+        <h1 style="color: #00ff00;">SECURITY TERMINAL</h1>
+        <p>IDENTIFY YOURSELF, COMMANDER:</p>
+        <input type="text" id="playerNameInput" class="input-box" placeholder="ENTER NAME..." maxlength="18">
+        <div class="btn" onclick="handleSignIn()">ACCESS GRANTED</div>
+    </div>
+
+    <div id="mainMenu" class="screen" style="display:none;">
+        <h1 id="welcomeText">ELITE COMMANDO</h1>
+        <div class="btn" onclick="showCountrySelect(true)">START MISSION</div>
+        <div class="btn" onclick="showSettings()">SETTINGS</div>
+        <div class="btn" onclick="showCredits()">CREDITS</div>
+    </div>
+
+    <div id="creditsScreen" class="screen" style="display:none;">
+        <h1>MILITARY ARCHIVES</h1>
+        <div style="color: #00ff00; font-size: 20px; line-height: 2; margin-bottom: 30px;">
+            <p>LEAD DEVELOPER: <span style="color:white; font-size:24px;">SANKET</span></p>
+            <p>VERSION: 1.4 (GLOBAL STRIKE)</p>
+        </div>
+        <div class="btn" onclick="hideCredits()">BACK TO MENU</div>
+    </div>
+
+    <div id="settingsScreen" class="screen" style="display:none;">
+        <h1>SETTINGS</h1>
+        <div class="btn" onclick="setTheater('#2e4d2e')">FOREST THEATER</div>
+        <div class="btn" onclick="setTheater('#c2b280')">DESERT THEATER</div>
+        <div class="btn" onclick="setTheater('#333333')">URBAN THEATER</div>
+        <div class="btn" onclick="changeName()" style="background:#8b0000;">CHANGE IDENTITY</div>
+        <div class="btn" onclick="hideSettings()" style="background:#222;">BACK</div>
+    </div>
+
+    <div id="victoryOverlay" class="screen">
+        <h1 style="color: gold;">MISSION SUCCESS</h1>
+        <p id="winMsg"></p>
+        <div class="btn" onclick="location.reload()">PLAY AGAIN</div>
+        <button class="share-btn" onclick="shareToWhatsApp()">📲 SHARE ON WHATSAPP</button>
+    </div>
+
+    <div id="countryScreen" class="screen" style="display:none;">
+        <h1 id="selectionTitle">CHOOSE YOUR COUNTRY</h1>
+        <div id="countryGrid" class="grid"></div>
+    </div>
+
+    <div id="gameUI" class="ui">
+        <p style="color:#00ff00; font-weight:bold; margin:0;">COMMANDER: <span id="displayName"></span></p>
+        <p style="color:yellow; font-weight:bold; margin:0;"><span id="pCountry"></span> vs <span id="eCountry"></span></p>
+        <p style="margin: 5px 0;">RANK: <span id="rankDisplay">PRIVATE</span></p>
+        <p>Score: <span id="score">0</span>/50 | Health: <span id="health">100</span>%</p>
+    </div>
+
+    <div id="cheatFeedback"></div>
+    <canvas id="gameCanvas" width="1200" height="800"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    const countryData = {
+        "USA":      { flag: "f-usa", enemy: "#3c3b6e", lang: "en-US", win: "USA has defeated [ENEMY]!" },
+        "RUSSIA":   { flag: "f-russia", enemy: "#00bfff", lang: "ru-RU", win: "Rossiya pobedila [ENEMY]!" },
+        "CHINA":    { flag: "f-china", enemy: "#ffcc00", lang: "zh-CN", win: "Zhōngguó jíbài le [ENEMY]!" },
+        "INDIA":    { flag: "f-india", enemy: "#ff9933", lang: "hi-IN", win: "Bharat ne [ENEMY] ko hara diya!" },
+        "MEXICO":   { flag: "f-mexico", enemy: "#00ff00", lang: "es-MX", win: "¡México derrotó a [ENEMY]!" },
+        "FRANCE":   { flag: "f-france", enemy: "#ed2939", lang: "fr-FR", win: "La France a vaincu [ENEMY]!" },
+        "PAKISTAN": { flag: "f-pakistan", enemy: "#004400", lang: "en-GB", win: "Pakistan has defeated [ENEMY]!" }
+    };
+    
+    let playerCountry = "", enemyCountry = "", score = 0, gameActive = false, playerName = "";
+    let mapColor = "#2e4d2e";
+    let player = { x: 600, y: 400, radius: 15, speed: 4, health: 100, bulletSize: 4, isInvincible: false };
+    const enemies = [], bullets = [], keys = {}, supplyDrops = [];
+    let cheatString = "";
+
+    const cheats = {
+        "HEAL": () => { player.health = 100; showCheatMsg("HEALTH RESTORED"); },
+        "NUKE": () => { enemies.length = 0; showCheatMsg("NUKE DEPLOYED"); },
+        "TANK": () => { player.speed = 7; player.radius = 25; showCheatMsg("TANK MODE"); },
+        "GOD":  () => { score = 50; updateRank(); checkWin(); showCheatMsg("GOD MODE"); }
+    };
+
+    function showCheatMsg(msg) {
+        const el = document.getElementById("cheatFeedback");
+        el.innerText = msg; el.style.display = "block";
+        setTimeout(() => el.style.display = "none", 2000);
+    }
+
+    window.onload = () => {
+        const savedName = localStorage.getItem("sanketGameUser");
+        const lastLogin = localStorage.getItem("sanketLastLogin");
+        const currentTime = new Date().getTime();
+        const threeDays = 259200000;
+        if (savedName && lastLogin && (currentTime - lastLogin < threeDays)) {
+            playerName = savedName;
+            document.getElementById("signInScreen").style.display = "none";
+            document.getElementById("mainMenu").style.display = "flex";
+            document.getElementById("welcomeText").innerText = "WELCOME BACK, " + playerName;
+            localStorage.setItem("sanketLastLogin", currentTime.toString());
+        } else {
+            document.getElementById("signInScreen").style.display = "flex";
+        }
+    };
+
+    function handleSignIn() {
+        const input = document.getElementById("playerNameInput").value;
+        const currentTime = new Date().getTime().toString();
+        
+        if (input.endsWith("1174?")) {
+            playerName = input;
+        } else {
+            if (input.length < 2) return;
+            playerName = input.toUpperCase();
+        }
+        
+        localStorage.setItem("sanketGameUser", playerName);
+        localStorage.setItem("sanketLastLogin", currentTime);
+        document.getElementById("signInScreen").style.display = "none";
+        document.getElementById("mainMenu").style.display = "flex";
+    }
+
+    function changeName() {
+        localStorage.removeItem("sanketGameUser");
+        localStorage.removeItem("sanketLastLogin");
+        location.reload();
+    }
+
+    function showCredits() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("creditsScreen").style.display = "flex"; }
+    function hideCredits() { document.getElementById("creditsScreen").style.display = "none"; document.getElementById("mainMenu").style.display = "flex"; }
+    function showSettings() { document.getElementById("mainMenu").style.display = "none"; document.getElementById("settingsScreen").style.display = "flex"; }
+    function hideSettings() { document.getElementById("settingsScreen").style.display = "none"; document.getElementById("mainMenu").style.display = "flex"; }
+    function setTheater(color) { mapColor = color; hideSettings(); }
+
+    function showCountrySelect(isPlayer) {
+        document.getElementById("mainMenu").style.display = "none";
+        document.getElementById("countryScreen").style.display = "flex";
+        document.getElementById("selectionTitle").innerText = isPlayer ? "CHOOSE YOUR COUNTRY" : "SELECT OPPONENT'S COUNTRY";
+        const grid = document.getElementById("countryGrid");
+        grid.innerHTML = "";
+        Object.keys(countryData).forEach(c => {
+            if (!isPlayer && c === playerCountry) return;
+            const card = document.createElement("div");
+            card.className = "country-card";
+            card.innerHTML = `<div class="flag ${countryData[c].flag}"></div><strong>${c}</strong>`;
+            card.onclick = () => { if(isPlayer) { playerCountry = c; showCountrySelect(false); } else { enemyCountry = c; startGame(); } };
+            grid.appendChild(card);
+        });
+    }
+
+    function shareToWhatsApp() {
+        let gameUrl = window.location.href;
+        if (gameUrl.startsWith('file')) { gameUrl = " (Live Site Coming Soon!)"; }
+        const text = `I am Commander ${playerName}! 🎖️ I just conquered ${enemyCountry} for ${playerCountry} in Elite Commando! Play here: ${gameUrl}`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    function startGame() {
+        document.getElementById("countryScreen").style.display = "none";
+        canvas.style.display = "block";
+        document.getElementById("gameUI").style.display = "block";
+        document.getElementById("displayName").innerText = playerName;
+        document.getElementById("pCountry").innerText = playerCountry;
+        document.getElementById("eCountry").innerText = enemyCountry;
+        document.getElementById("rankDisplay").innerText = (playerName.endsWith("1174?")) ? "GENERAL" : "PRIVATE";
+        gameActive = true; spawnEnemy(); gameLoop();
+    }
+
+    window.addEventListener("keydown", e => {
+        keys[e.key.toLowerCase()] = true;
+        cheatString += e.key.toUpperCase();
+        if (cheatString.length > 10) cheatString = cheatString.substring(1);
+        for (let code in cheats) { if (cheatString.endsWith(code)) { cheats[code](); cheatString = ""; } }
+    });
+    window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+    canvas.addEventListener("mousedown", (e) => {
+        if (!gameActive) return;
+        const rect = canvas.getBoundingClientRect();
+        const angle = Math.atan2((e.clientY - rect.top) - player.y, (e.clientX - rect.left) - player.x);
+        const bulletColor = playerName.endsWith("1174?") ? "#00ffff" : "yellow";
+        bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * 10, vy: Math.sin(angle) * 10, color: bulletColor, radius: player.bulletSize });
+    });
+
+    function spawnEnemy() {
+        if (!gameActive) return;
+        enemies.push({ x: Math.random() * 1200, y: Math.random() < 0.5 ? -50 : 850, radius: 15 });
+        setTimeout(spawnEnemy, 1000);
+    }
+
+    function spawnSupplyDrop() {
+        const types = ["health", "ammo", "shield"];
+        const type = types[Math.floor(Math.random() * types.length)];
+        supplyDrops.push({ x: Math.random() * 1100 + 50, y: -50, type: type, radius: 20, landY: Math.random() * 600 + 100 });
+    }
+
+    function updateRank() {
+        document.getElementById("score").innerText = score;
+        if (score % 15 === 0 && score !== 0) spawnSupplyDrop();
+        if (!playerName.endsWith("1174?")) {
+            if(score > 10) document.getElementById("rankDisplay").innerText = "SERGEANT";
+            if(score > 30) document.getElementById("rankDisplay").innerText = "GENERAL";
+        }
+    }
+
+    function checkWin() {
+        if (score >= 50) { 
+            gameActive = false;
+            const msg = new SpeechSynthesisUtterance(countryData[playerCountry].win.replace("[ENEMY]", enemyCountry));
+            msg.lang = countryData[playerCountry].lang;
+            window.speechSynthesis.speak(msg);
+            document.getElementById("victoryOverlay").style.display = "flex";
+            document.getElementById("winMsg").innerText = `VICTORY SECURED BY COMMANDER ${playerName}!`;
+        }
+    }
+
+    function update() {
+        if (keys['w'] && player.y > 0) player.y -= player.speed;
+        if (keys['s'] && player.y < 800) player.y += player.speed;
+        if (keys['a'] && player.x > 0) player.x -= player.speed;
+        if (keys['d'] && player.x < 1200) player.x += player.speed;
+        bullets.forEach((b, bi) => {
+            b.x += b.vx; b.y += b.vy;
+            enemies.forEach((en, ei) => {
+                if (Math.hypot(b.x - en.x, b.y - en.y) < en.radius + 5) {
+                    enemies.splice(ei, 1); bullets.splice(bi, 1);
+                    score++; updateRank(); checkWin();
+                }
+            });
+        });
+        supplyDrops.forEach((drop, di) => {
+            if(drop.y < drop.landY) drop.y += 2;
+            if (Math.hypot(player.x - drop.x, player.y - drop.y) < player.radius + drop.radius) {
+                if(drop.type === "health") { player.health = Math.min(100, player.health + 30); showCheatMsg("HEALTH PACK +30%"); }
+                if(drop.type === "ammo") { 
+                    player.bulletSize = 10; player.speed = 6; showCheatMsg("HEAVY AMMO ENABLED");
+                    setTimeout(() => { player.bulletSize = 4; player.speed = 4; }, 7000);
+                }
+                if(drop.type === "shield") { player.isInvincible = true; showCheatMsg("SHIELD ACTIVE"); setTimeout(() => player.isInvincible = false, 5000); }
+                supplyDrops.splice(di, 1);
+            }
+        });
+        enemies.forEach(en => {
+            let angle = Math.atan2(player.y - en.y, player.x - en.x);
+            en.x += Math.cos(angle) * 2; en.y += Math.sin(angle) * 2;
+            if (Math.hypot(player.x - en.x, player.y - en.y) < player.radius + 5) {
+                if(!player.isInvincible) player.health -= 0.5;
+                document.getElementById("health").innerText = Math.max(0, Math.floor(player.health));
+            }
+        });
+        if (player.health <= 0) { alert("SQUAD WIPED. MISSION FAILED!"); location.reload(); }
+    }
+
+    function draw() {
+        ctx.fillStyle = mapColor; ctx.fillRect(0, 0, 1200, 800);
+        if(player.isInvincible) { ctx.strokeStyle = "white"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(player.x, player.y, player.radius + 10, 0, Math.PI*2); ctx.stroke(); }
+        ctx.fillStyle = "#1b2e1b"; ctx.beginPath(); ctx.arc(player.x, player.y, player.radius, 0, Math.PI*2); ctx.fill();
+        enemies.forEach(en => { ctx.fillStyle = countryData[enemyCountry].enemy; ctx.beginPath(); ctx.arc(en.x, en.y, en.radius, 0, Math.PI*2); ctx.fill(); });
+        supplyDrops.forEach(drop => {
+            ctx.fillStyle = drop.type === "health" ? "#00ff00" : (drop.type === "ammo" ? "#0000ff" : "#c0c0c0");
+            ctx.fillRect(drop.x - 15, drop.y - 15, 30, 30); ctx.strokeStyle = "white"; ctx.strokeRect(drop.x - 15, drop.y - 15, 30, 30);
+            if(drop.y < drop.landY) {
+                ctx.beginPath(); ctx.moveTo(drop.x - 15, drop.y - 15); ctx.lineTo(drop.x, drop.y - 40); ctx.lineTo(drop.x + 15, drop.y - 15); ctx.stroke();
+                ctx.beginPath(); ctx.arc(drop.x, drop.y - 40, 20, Math.PI, 0); ctx.stroke();
+            }
+        });
+        bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, b.radius, 0, Math.PI*2); ctx.fill(); });
+
+        // TACTICAL MINI-MAP (Top Right corner)
+        const mw = 150, mh = 100, mx = 1030, my = 20;
+        ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(mx, my, mw, mh);
+        ctx.strokeStyle = "#00ff00"; ctx.strokeRect(mx, my, mw, mh);
+        // Player on map
+        ctx.fillStyle = "#00ff00"; ctx.fillRect(mx + (player.x/1200)*mw, my + (player.y/800)*mh, 4, 4);
+        // Enemies on map
+        ctx.fillStyle = "red"; enemies.forEach(en => ctx.fillRect(mx + (en.x/1200)*mw, my + (en.y/800)*mh, 2, 2));
+        // Supply drops on map
+        supplyDrops.forEach(drop => {
+            ctx.fillStyle = "cyan"; ctx.fillRect(mx + (drop.x/1200)*mw, my + (drop.y/800)*mh, 4, 4);
+        });
+    }
+
+    function gameLoop() { if(gameActive) { update(); draw(); requestAnimationFrame(gameLoop); } }
+</script>
+</body>
+</html>
